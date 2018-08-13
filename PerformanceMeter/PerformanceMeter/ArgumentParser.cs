@@ -2,26 +2,27 @@
 using PerformanceMeter.Attributes;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
 using System.Reflection;
 using System.Text;
+using System.Linq;
 
 namespace PerformanceMeter
 {
     /// <summary>
-    /// This class parses input arguments of <see cref="global::PerformanceMeter"/> program.
+    /// This class parses input arguments of <see cref="PerformanceMeter"/> program.
     /// </summary>
     internal static class ArgumentParser
     {
         private static string autPath;
-        private static uint processorCount;
         private static List<uint> processorAffinity;
+        private static FileInfo outputFile;
         private static ILog log = LogManager.GetLogger(typeof(ArgumentParser));
 
         /// <summary>
         /// Path to the Application Under Test.
         /// </summary>
-        [InputArgument("Path to the Application Under Test.", "-p")]
+        [InputArgument("Path to the Application Under Test.", "-a")]
         internal static string AutPath
         {
             get { return autPath; }
@@ -32,33 +33,38 @@ namespace PerformanceMeter
         }
 
         /// <summary>
-        /// Total count of the physical processor cores that may be used by Application Under Test.
-        /// </summary>
-        [InputArgument("Number of physical processor cores that may be used by Application Under Test.", "-c")]
-        internal static uint ProcessorCount
-        {
-            get { return processorCount; }
-            private set
-            {
-                processorCount = value;
-            }
-        }
-
-        /// <summary>
-        /// Index numbers of the physical processor cores that can be used by Application Under Test.
+        /// Index numbers of the logical processor threads that can be used by Application Under Test.
         /// </summary>
         /// <exception cref="ArgumentNullException">Thrown on attempt to assign null.</exception>
         /// <exception cref="ArgumentException">Thrown on attempt to assign empty list.</exception>
-        [InputArgument("Physical processor alignment.\nAllows to assign specific cores to the Application Under Test.", "-a")]
-        internal static List<uint> ProcessorAffinity
+        [InputArgument("Logical processor numbers that can be used by the Application Under Test (separated by ',').", "-c")]
+        internal static string ProcessorAffinity
         {
-            get { return processorAffinity; }
+            get
+            {
+                if (processorAffinity != null && processorAffinity.Count > 0)
+                    return string.Join(",", processorAffinity);
+                return null;
+            }
             private set
             {
-                if (value.Count == 0)
-                    throw new ArgumentException("ProcessorAffinity empty list");
-                processorAffinity = value ?? throw new ArgumentNullException("ProcessorAffinity");
+                if (string.IsNullOrWhiteSpace(value))
+                    throw new ArgumentException("ProcessorAffinity argument empty");
+                processorAffinity = new List<uint>(value.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(s => uint.Parse(s)));
             }   
+        }
+
+        /// <summary>
+        /// Path to the output file containing AUT performance test report and analisys.
+        /// </summary>
+        [InputArgument("Path to the file containing report regarding AUT execution.", "-o")]
+        internal static string OutputFile
+        {
+            get { return outputFile.FullName; }
+            private set
+            {
+                outputFile = new FileInfo(value);
+            }
         }
 
         /// <summary>
@@ -67,54 +73,62 @@ namespace PerformanceMeter
         /// <param name="args"><see cref="global::PerformanceMeter"/> input arguments.</param>
         public static void ParseArguments(ref string[] args)
         {
-            log.InfoFormat("Input arguments:");
-            Type myType = typeof(ArgumentParser);
-            PropertyInfo[] properties = myType.GetProperties(BindingFlags.Static | BindingFlags.NonPublic);
-            foreach(var property in properties)
-                ProcessArgument(ref args, myType.GetProperty(property.Name, BindingFlags.Static | BindingFlags.NonPublic));
+            if (args == null || args.Length == 0)
+            {
+                DisplayHelp(GetArgumentProperties());
+                return;
+            }
+            log.InfoFormat($"Input arguments: {string.Join(" ", args)}");
+            try
+            {
+                SetArgumentProperties(ref args, GetArgumentProperties());
+            }
+            catch(IndexOutOfRangeException)
+            {
+                log.Error("Some input arguments does not have a value provided!");
+                throw;
+            }
+            catch(Exception exc)
+            {
+                log.Error($"Unhandled error occurred: {exc.Message}");
+                throw;
+            }
         }
 
-        /// <summary>
-        /// Parses input arguments and sets matching properties with <see cref="InputArgumentAttribute"/>, then removes argument and flag from argument array.
-        /// </summary>
-        /// <param name="args"><see cref="global::PerformanceMeter"/> input arguments.</param>
-        /// <param name="property">A property of <see cref="ArgumentParser"/> having <see cref="InputArgumentAttribute"/>.</param>
-        /// <exception cref="ArgumentNullException">Thrown when property argument is null or does not has <see cref="InputArgumentAttribute"/>.</exception>
-        /// <exception cref="ArgumentException">Thrown when <see cref="global::PerformanceMeter"/> input arguments are invalid or missing.</exception>
-        public static void ProcessArgument(ref string[] args, PropertyInfo property)
+        private static void SetArgumentProperties(ref string[] args, List<PropertyInfo> properties)
         {
-            if(!Attribute.IsDefined(property, typeof(InputArgumentAttribute)))
-                return;
-            InputArgumentAttribute propertyAttribute = property.GetCustomAttribute(typeof(InputArgumentAttribute)) as InputArgumentAttribute;
-            int i = 0;
-            while (i < args.Length)
+            foreach (var property in properties)
             {
-                if ((propertyAttribute.Texts as List<string>).Contains(args[i]))
-                {
-                    if (args.ElementAtOrDefault(i + 1) == null || string.IsNullOrWhiteSpace(args[i + 1]) || i + 1 > args.Length)
-                        throw new ArgumentException(String.Format("value of argument: {0} is null, empty string or whitespace", args[i]));
-                    else if (property.PropertyType == typeof(string))
-                        property.SetValue(null, args[i + 1]);
-                    else if (property.PropertyType == typeof(List<uint>))
+                InputArgumentAttribute propertyAttribute = property.GetCustomAttribute(typeof(InputArgumentAttribute)) as InputArgumentAttribute;
+                    for (int i = 0; i < args.Length; i++)
                     {
-                        List<uint> output = new List<uint>();
-                        foreach (var value in args[i + 1].Split(","))
-                            output.Add(uint.Parse(value));
-                        property.SetValue(null, output);
-                    } 
-                    else if (property.PropertyType == typeof(uint))
-                        property.SetValue(null, uint.Parse(args[i + 1]));
-                    var temp = args.ToList();
-                    temp.RemoveRange(i, 2);
-                    args = temp.ToArray();
-                    i = 0;
-                }
-                else
-                {
-                    i++;
-                    continue;
-                }
+                        if ((propertyAttribute.Texts as List<string>).Contains(args[i]))
+                            property.SetValue(null, args[i + 1]);
+                    }
             }
+        }
+
+        private static void DisplayHelp(IEnumerable<PropertyInfo> argumentProperties)
+        {
+            string helpText = "Help:\n";
+            foreach(var property in argumentProperties)
+            {
+                var attribute = property.GetCustomAttribute(typeof(InputArgumentAttribute)) as InputArgumentAttribute;
+                helpText += string.Format("{0,2} | {1,2} \n", string.Join(" ", attribute.Texts as List<string>), attribute.HelpText);
+            }
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine(helpText);
+            Console.ResetColor();
+        }
+
+        private static List<PropertyInfo> GetArgumentProperties()
+        {
+            List<PropertyInfo> output = new List<PropertyInfo>();
+            PropertyInfo[] properties = typeof(ArgumentParser).GetProperties(BindingFlags.Static | BindingFlags.NonPublic);
+            foreach (var property in properties)
+                if (Attribute.IsDefined(property, typeof(InputArgumentAttribute)))
+                    output.Add(property);
+            return output;
         }
     }
 }

@@ -7,7 +7,7 @@ using System.Text;
 namespace PerformanceMeter.Windows
 {
     /// <summary>
-    /// Provides CPU information
+    /// Provides CPU information.
     /// </summary>
     public static class Processor
     {

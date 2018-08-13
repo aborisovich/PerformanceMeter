@@ -1,5 +1,8 @@
 ﻿using log4net;
+using log4net.Config;
 using System;
+using System.IO;
+using System.Reflection;
 
 namespace PerformanceMeter
 {
@@ -9,8 +12,11 @@ namespace PerformanceMeter
 
         static void Main(string[] args)
         {
+            var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
+            XmlConfigurator.Configure(logRepository, new FileInfo(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Log.config")));
             log.InfoFormat("Performance Meter started.");
             ArgumentParser.ParseArguments(ref args);
+            log.InfoFormat("Performance Meter completed execution.");
         }
     }
 }
