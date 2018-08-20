@@ -12,10 +12,18 @@ namespace PerformanceMeter
 
         static void Main(string[] args)
         {
-            var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
-            XmlConfigurator.Configure(logRepository, new FileInfo(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Log.config")));
-            log.InfoFormat("Performance Meter started.");
-            ArgumentParser.ParseArguments(ref args);
+            try
+            {
+                var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
+                XmlConfigurator.Configure(logRepository, new FileInfo(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Log.config")));
+                log.InfoFormat("Performance Meter started.");
+                ArgumentParser.ParseArguments(ref args);
+            }
+            catch(Exception e)
+            {
+                log.Error($"Performance Meter stopped execution due to error: {e.Message}");
+                return;
+            }
             log.InfoFormat("Performance Meter completed execution.");
         }
     }

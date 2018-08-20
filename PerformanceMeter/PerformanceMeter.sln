@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27004.2005
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PerformanceMeter", "PerformanceMeter\PerformanceMeter.csproj", "{D1FFFDB8-717E-4F8A-BB21-35350495778A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PerformanceMeter", "PerformanceMeter\PerformanceMeter.csproj", "{D1FFFDB8-717E-4F8A-BB21-35350495778A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PerformanceMeterUT", "PerformanceMeterUT\PerformanceMeterUT.csproj", "{90FBCF78-22A5-403D-99B2-38FD57E7C419}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{D1FFFDB8-717E-4F8A-BB21-35350495778A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D1FFFDB8-717E-4F8A-BB21-35350495778A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D1FFFDB8-717E-4F8A-BB21-35350495778A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90FBCF78-22A5-403D-99B2-38FD57E7C419}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90FBCF78-22A5-403D-99B2-38FD57E7C419}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90FBCF78-22A5-403D-99B2-38FD57E7C419}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90FBCF78-22A5-403D-99B2-38FD57E7C419}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

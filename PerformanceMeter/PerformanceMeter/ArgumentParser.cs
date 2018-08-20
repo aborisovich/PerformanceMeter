@@ -6,7 +6,10 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.ComponentModel;
 
+[assembly: InternalsVisibleTo("PerformanceMeterUT")]
 namespace PerformanceMeter
 {
     /// <summary>
@@ -14,7 +17,7 @@ namespace PerformanceMeter
     /// </summary>
     internal static class ArgumentParser
     {
-        private static string autPath;
+        private static FileInfo autPath;
         private static List<uint> processorAffinity;
         private static FileInfo outputFile;
         private static ILog log = LogManager.GetLogger(typeof(ArgumentParser));
@@ -22,12 +25,27 @@ namespace PerformanceMeter
         /// <summary>
         /// Path to the Application Under Test.
         /// </summary>
+        /// <exception cref="FileNotFoundException">Thrown when Application Under Test does not exist under provided <see cref="Path"/>.</exception>
+        /// <exception cref="FileLoadException">Thrown when Application Under Test has invalid attributes.</exception>
         [InputArgument("Path to the Application Under Test.", "-a")]
-        internal static string AutPath
+        internal static FileInfo AutPath
         {
             get { return autPath; }
             private set
             {
+                if (!value.Exists)
+                    throw new FileNotFoundException("Application Under Test not found under provided path");
+                switch (value.Attributes)
+                {
+                    case FileAttributes.Compressed:
+                        throw new FileLoadException("Application Under Test is a compressed file and can not be executed");
+                    case FileAttributes.Directory:
+                        throw new FileLoadException("Provided path for Application Under Test is a directory");
+                    case FileAttributes.Offline:
+                    case FileAttributes.System:
+                    case FileAttributes.ReparsePoint:
+                        throw new FileLoadException("Application Under Test can not be executed due to invalid file properties");
+                }
                 autPath = value;
             }
         }
@@ -57,13 +75,16 @@ namespace PerformanceMeter
         /// <summary>
         /// Path to the output file containing AUT performance test report and analisys.
         /// </summary>
+        /// <exception cref="DirectoryNotFoundException">Thrown when directory specified for writing output file does not exist.</exception>
         [InputArgument("Path to the file containing report regarding AUT execution.", "-o")]
-        internal static string OutputFile
+        internal static FileInfo OutputFile
         {
-            get { return outputFile.FullName; }
+            get { return outputFile; }
             private set
             {
-                outputFile = new FileInfo(value);
+                if (!value.Directory.Exists)
+                    throw new DirectoryNotFoundException("Directory for the output file does not exist");
+                outputFile = value;
             }
         }
 
@@ -85,12 +106,18 @@ namespace PerformanceMeter
             }
             catch(IndexOutOfRangeException)
             {
-                log.Error("Some input arguments does not have a value provided!");
+                log.Error("Parsing input arguments failed: Some input arguments does not have a value provided!");
                 throw;
             }
-            catch(Exception exc)
+            catch(TargetInvocationException e)
             {
-                log.Error($"Unhandled error occurred: {exc.Message}");
+                log.Error($"Parsing input arguments failed: {e.InnerException.Message}");
+                throw;
+            }
+            catch(Exception e)
+            {
+                log.Fatal("Fatal error during parsing input arguments!");
+                log.Fatal($"Message: {e.Message}");
                 throw;
             }
         }
@@ -100,11 +127,25 @@ namespace PerformanceMeter
             foreach (var property in properties)
             {
                 InputArgumentAttribute propertyAttribute = property.GetCustomAttribute(typeof(InputArgumentAttribute)) as InputArgumentAttribute;
-                    for (int i = 0; i < args.Length; i++)
+                for (int i = 0; i < args.Length; i++)
+                {
+                    if ((propertyAttribute.Texts as List<string>).Contains(args[i]))
                     {
-                        if ((propertyAttribute.Texts as List<string>).Contains(args[i]))
-                            property.SetValue(null, args[i + 1]);
+                        TypeConverter converter = TypeDescriptor.GetConverter(property.GetType());
+                        if (converter.CanConvertFrom(typeof(string)))
+                            property.SetValue(null, converter.ConvertFrom(args[i + 1]));
+                        else
+                        {
+                            ConstructorInfo constructor = property.PropertyType.GetConstructors()
+                                .Where(c => c.GetParameters().Length == 1 && c.GetParameters().First().ParameterType == typeof(string)).FirstOrDefault();
+                            dynamic instance = (constructor == null) ? args[i + 1] : constructor.Invoke(new object[] { args[i + 1] });
+
+                            property.SetValue(null, instance);
+                        }
+                            
                     }
+                           
+                }
             }
         }
 
