@@ -92,14 +92,15 @@ namespace PerformanceMeter
         /// Parses input arguments and sets all <see cref="ArgumentParser"/> property values.
         /// </summary>
         /// <param name="args"><see cref="global::PerformanceMeter"/> input arguments.</param>
-        public static void ParseArguments(ref string[] args)
+        /// <returns>True when arguments were parsed successfully, false when none provided.</returns>
+        public static bool ParseArguments(ref string[] args)
         {
             if (args == null || args.Length == 0)
             {
                 DisplayHelp(GetArgumentProperties());
-                return;
+                return false;
             }
-            log.InfoFormat($"Input arguments: {string.Join(" ", args)}");
+            log.Debug($"Input arguments: {string.Join(" ", args)}");
             try
             {
                 SetArgumentProperties(ref args, GetArgumentProperties());
@@ -120,6 +121,7 @@ namespace PerformanceMeter
                 log.Fatal($"Message: {e.Message}");
                 throw;
             }
+            return true;
         }
 
         private static void SetArgumentProperties(ref string[] args, List<PropertyInfo> properties)

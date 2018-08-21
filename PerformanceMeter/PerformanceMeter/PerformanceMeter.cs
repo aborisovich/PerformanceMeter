@@ -3,6 +3,7 @@ using log4net.Config;
 using System;
 using System.IO;
 using System.Reflection;
+using PerformanceMeter.Settings;
 
 namespace PerformanceMeter
 {
@@ -14,14 +15,16 @@ namespace PerformanceMeter
         {
             try
             {
-                var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
-                XmlConfigurator.Configure(logRepository, new FileInfo(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Log.config")));
-                log.InfoFormat("Performance Meter started.");
-                ArgumentParser.ParseArguments(ref args);
+                ApplicationSettings appSettings = new ApplicationSettings();
+                if (!ArgumentParser.ParseArguments(ref args))
+                    return;
+                log.Info("Performance Meter has started.");
+                appSettings.LoadConfig();
+
             }
             catch(Exception e)
             {
-                log.Error($"Performance Meter stopped execution due to error: {e.Message}");
+                log.Fatal($"Performance Meter stopped execution due to error: {e.Message}");
                 return;
             }
             log.InfoFormat("Performance Meter completed execution.");

@@ -37,7 +37,6 @@ namespace PerformanceMeter
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                log.Debug($"Hardware processor cores count: {Processor.HardwareCores.Length}");
                 return Processor.HardwareCores.Length;
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
