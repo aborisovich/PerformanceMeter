@@ -159,6 +159,11 @@ namespace PerformanceMeter
             }
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine(helpText);
+
+            string infoText = "SystemInfo:\n";
+            infoText += new SystemInfo();
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine(infoText);
             Console.ResetColor();
         }
 

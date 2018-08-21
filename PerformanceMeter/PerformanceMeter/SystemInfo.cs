@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace PerformanceMeter
 {
-    internal static class SystemInfo
+    internal class SystemInfo
     {
         private static ILog log = LogManager.GetLogger(typeof(SystemInfo));
 
@@ -51,7 +51,7 @@ namespace PerformanceMeter
             throw new NotSupportedException($"Not supported operating system: {RuntimeInformation.OSDescription}");
         }
 
-        public new static string ToString()
+        public override string ToString()
         {
             return  $"Operating system: {OperatingSystem}\n" +
                     $"Architecture: {Architecture}\n" +
