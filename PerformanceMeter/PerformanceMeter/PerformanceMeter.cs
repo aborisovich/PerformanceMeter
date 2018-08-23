@@ -20,7 +20,8 @@ namespace PerformanceMeter
                     return;
                 log.Info("Performance Meter has started.");
                 appSettings.LoadConfig();
-
+                AutTester tester = new AutTester();
+                tester.StartTest();
             }
             catch(Exception e)
             {
