@@ -15,6 +15,7 @@ namespace PerformanceMeter
         {
             try
             {
+                System.Threading.Thread.CurrentThread.Name = "PMeter";
                 ApplicationSettings appSettings = new ApplicationSettings();
                 if (!ArgumentParser.ParseArguments(ref args))
                     return;

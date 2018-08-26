@@ -43,7 +43,8 @@ namespace PerformanceMeter
             Aut.Start();
             Aut.ProcessorAffinity = new IntPtr(1);
             Aut.PriorityClass = Enum.Parse<ProcessPriorityClass>(ArgumentParser.AutPriority);
-
+            Aut.BeginOutputReadLine();
+            Aut.BeginErrorReadLine();
             log.Info($"AUT has been started. Starting time: {Aut.StartTime}");
             log.Info($"AUT Input arguments: {AutStartInfo.Arguments}");
             log.Info($"AUT Main Thread ID: {Aut.Id}");
@@ -55,34 +56,19 @@ namespace PerformanceMeter
         private void AutSetEvents()
         {
             Aut.EnableRaisingEvents = true;
-            Aut.Exited += new EventHandler(AutExit);
+            AutLogger autLogger = new AutLogger(Aut);
+            Aut.Exited += new EventHandler(autLogger.LogExit);
+            
             if (!AutStartInfo.RedirectStandardInput)
                 log.Warn("AUT Standard Input redirection is disabled. AUT may require user interaction to receive input.");
             if (AutStartInfo.RedirectStandardOutput)
-                Aut.OutputDataReceived += new DataReceivedEventHandler(LogAutOutput);
+                Aut.OutputDataReceived += new DataReceivedEventHandler(autLogger.LogOutput);
             else
                 log.Warn("AUT Standard Output redirection is disabled. AUT may require user attention.");
             if (AutStartInfo.RedirectStandardError)
-                Aut.ErrorDataReceived += new DataReceivedEventHandler(LogAutError);
+                Aut.ErrorDataReceived += new DataReceivedEventHandler(autLogger.LogError);
             else
                 log.Warn($"AUT Standard Error redirection is disabled. AUT may cause unhandled by Performance Meter errors.");
-        }
-
-        private void AutExit(object sendingProcess, EventArgs output)
-        {
-            log.Info($"AUT has terminated with exit code: {Aut.ExitCode}. Exit time: {Aut.ExitTime.ToLongTimeString()}");
-        }
-
-        private void LogAutOutput(object sendingProcess, DataReceivedEventArgs output)
-        {
-            if (!string.IsNullOrEmpty(output.Data))
-                log.Info(output.Data);
-        }
-
-        private void LogAutError(object sendingProcess, DataReceivedEventArgs output)
-        {
-            if (!string.IsNullOrEmpty(output.Data))
-                log.Info(output.Data);
         }
     }
 }
