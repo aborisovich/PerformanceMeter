@@ -19,7 +19,7 @@ namespace PerformanceMeter
     internal static class ArgumentParser
     {
         private static FileInfo autPath;
-        private static ProcessPriorityClass autPriority;
+        private static ProcessPriorityClass autPriority = ProcessPriorityClass.Normal;
         private static List<uint> processorAffinity;
         private static FileInfo outputFile;
         private static ILog log = LogManager.GetLogger(typeof(ArgumentParser));
