@@ -17,13 +17,13 @@ namespace PerformanceMeter
         {
             try
             {
-                log.Info($"*** Starting '{ArgumentParser.AutPath.Name} AUT test ***");
+                log.Info($"*** Starting '{ArgumentParser.AutPath.Name}' AUT test ***");
                 launcher.StartAut();
             }
             catch(Exception exc)
             {
                 log.Fatal($"Application Under Test has been forcibly terminated due to unhandled exception.");
-                log.Fatal($"Source: {exc.Source} \tMessage: {exc.Message}");
+                log.Fatal($"Source: {exc.Source} Message: {exc.Message}");
                 if (!launcher.Aut.HasExited)
                     launcher.Aut.Kill();
             }

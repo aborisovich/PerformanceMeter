@@ -10,6 +10,8 @@ namespace PerformanceMeter.Settings
     public sealed class ApplicationSettings
     {
         private static readonly ILog log = LogManager.GetLogger(typeof(ApplicationSettings));
+        const int loggerSectionPad = 29;
+        const int columnPosition = 100;
 
         public static readonly string LogConfigFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Settings", "Log.config");
         public static readonly string SettingsFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Settings", "PerformanceMeter.config");
@@ -21,6 +23,8 @@ namespace PerformanceMeter.Settings
         public static bool AutRedirectStandardOutput { get; private set; }
 
         public static bool AutRedirectStandardError { get; private set; }
+
+        public static bool AutCreateWindow { get; private set; }
 
         public ApplicationSettings()
         {
@@ -38,16 +42,30 @@ namespace PerformanceMeter.Settings
                 log.Fatal($"Failed to find Application Settings configuration file in: {SettingsFilePath}");
                 throw new FileNotFoundException("PerformanceMeter.config file with application settings not found");
             }
-
+            
             var appSettings = Configuration.AppSettings.Settings;
+            string settingName = string.Empty;
+            string settingValue = string.Empty;
+
             AutRedirectStandardInput = (appSettings["AutRedirectStandardInput"] != null) ? bool.Parse(appSettings["AutRedirectStandardInput"].Value) : false;
-            log.Debug($"Setting: {nameof(AutRedirectStandardInput)} \tValue: {AutRedirectStandardInput}");
+            settingName = $"Setting: {nameof(AutRedirectStandardInput)}";
+            settingValue = $"Value: {AutRedirectStandardInput}".PadLeft(columnPosition - (loggerSectionPad + settingName.Length));
+            log.Debug(settingName + settingValue);
 
             AutRedirectStandardOutput = (appSettings["AutRedirectStandardOutput"] != null) ? bool.Parse(appSettings["AutRedirectStandardOutput"].Value) : false;
-            log.Debug($"Setting: {nameof(AutRedirectStandardOutput)} \tValue: {AutRedirectStandardOutput}");
+            settingName = $"Setting: {nameof(AutRedirectStandardOutput)}";
+            settingValue = $"Value: {AutRedirectStandardOutput}".PadLeft(columnPosition - (loggerSectionPad + settingName.Length));
+            log.Debug(settingName + settingValue);
 
             AutRedirectStandardError = (appSettings["AutRedirectStandardError"] != null) ? bool.Parse(appSettings["AutRedirectStandardError"].Value) : false;
-            log.Debug($"Setting: {nameof(AutRedirectStandardError)} \tValue: {AutRedirectStandardError}");
+            settingName = $"Setting: {nameof(AutRedirectStandardError)}";
+            settingValue = $"Value: {AutRedirectStandardError}".PadLeft(columnPosition - (loggerSectionPad + settingName.Length));
+            log.Debug(settingName + settingValue);
+
+            AutCreateWindow = (appSettings["AutCreateWindow"] != null) ? bool.Parse(appSettings["AutRedirectStandardError"].Value) : false;
+            settingName = $"Setting: {nameof(AutCreateWindow)}";
+            settingValue = $"Value: {AutCreateWindow}".PadLeft(columnPosition - (loggerSectionPad + settingName.Length));
+            log.Debug(settingName + settingValue);
         }
     }
 }

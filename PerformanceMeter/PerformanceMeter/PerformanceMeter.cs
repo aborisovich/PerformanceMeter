@@ -23,9 +23,14 @@ namespace PerformanceMeter
                 AutTester tester = new AutTester();
                 tester.StartTest();
             }
+            catch(TargetInvocationException)
+            {
+                log.Fatal($"Performance Meter stopped execution due to invalid input parameters.");
+                return;
+            }
             catch(Exception e)
             {
-                log.Fatal($"Performance Meter stopped execution due to error: {e.Message}");
+                log.Fatal($"Performance Meter stopped execution due to unhandled error: {e.Message}");
                 return;
             }
             log.InfoFormat("Performance Meter completed execution.");

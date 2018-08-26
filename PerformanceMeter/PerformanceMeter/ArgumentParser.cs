@@ -8,6 +8,7 @@ using System.Text;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.ComponentModel;
+using System.Diagnostics;
 
 [assembly: InternalsVisibleTo("PerformanceMeterUT")]
 namespace PerformanceMeter
@@ -18,6 +19,7 @@ namespace PerformanceMeter
     internal static class ArgumentParser
     {
         private static FileInfo autPath;
+        private static ProcessPriorityClass autPriority;
         private static List<uint> processorAffinity;
         private static FileInfo outputFile;
         private static ILog log = LogManager.GetLogger(typeof(ArgumentParser));
@@ -34,19 +36,36 @@ namespace PerformanceMeter
             private set
             {
                 if (!value.Exists)
-                    throw new FileNotFoundException("Application Under Test not found under provided path");
+                    throw new FileNotFoundException("Application Under Test not found under provided path", value.FullName);
                 switch (value.Attributes)
                 {
                     case FileAttributes.Compressed:
-                        throw new FileLoadException("Application Under Test is a compressed file and can not be executed");
+                        throw new FileLoadException("Application Under Test is a compressed file and can not be executed", value.FullName);
                     case FileAttributes.Directory:
-                        throw new FileLoadException("Provided path for Application Under Test is a directory");
+                        throw new FileLoadException("Provided path for Application Under Test is a directory", value.FullName);
                     case FileAttributes.Offline:
                     case FileAttributes.System:
                     case FileAttributes.ReparsePoint:
-                        throw new FileLoadException("Application Under Test can not be executed due to invalid file properties");
+                        throw new FileLoadException("Application Under Test can not be executed due to invalid file properties", value.FullName);
                 }
                 autPath = value;
+            }
+        }
+
+        /// <summary>
+        /// Application Under Test input arguments.
+        /// </summary>
+        [InputArgument("Application Under Test input arguments.", "-i")]
+        internal static string AutArgs { get; private set; }
+
+        [InputArgument("Application Under Test process priority.", "-p")]
+        internal static string AutPriority
+        {
+            get { return autPriority.ToString(); }
+            set
+            {
+                if (!Enum.TryParse(value, out autPriority))
+                    throw new ArgumentException("Invalid priority name value", nameof(AutPriority));
             }
         }
 
@@ -67,7 +86,7 @@ namespace PerformanceMeter
             private set
             {
                 if (string.IsNullOrWhiteSpace(value))
-                    throw new ArgumentException("ProcessorAffinity argument empty");
+                    throw new ArgumentException("Argument is null or empty", nameof(ProcessorAffinity));
                 processorAffinity = new List<uint>(value.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(s => uint.Parse(s)));
             }   
         }
@@ -87,6 +106,7 @@ namespace PerformanceMeter
                 outputFile = value;
             }
         }
+
 
         /// <summary>
         /// Parses input arguments and sets all <see cref="ArgumentParser"/> property values.
