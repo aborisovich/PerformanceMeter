@@ -12,6 +12,7 @@ namespace PerformanceMeter
     internal sealed class AutLauncher
     {
         ILog log = LogManager.GetLogger(typeof(AutLauncher));
+        private AutLogger autLogger;
 
         public Process Aut { get; private set; }
 
@@ -29,8 +30,6 @@ namespace PerformanceMeter
                 UseShellExecute = !(ApplicationSettings.AutRedirectStandardInput || ApplicationSettings.AutRedirectStandardOutput || ApplicationSettings.AutRedirectStandardError),
                 CreateNoWindow = !ApplicationSettings.AutCreateWindow,
             };
-            if (!AutStartInfo.CreateNoWindow)
-                AutStartInfo.WindowStyle = ProcessWindowStyle.Normal;
         }
 
         public void StartAut()
@@ -39,6 +38,7 @@ namespace PerformanceMeter
             {
                 StartInfo = AutStartInfo
             };
+            autLogger = new AutLogger(Aut);
             AutSetEvents();
             Aut.Start();
             Aut.ProcessorAffinity = new IntPtr(1);
@@ -49,14 +49,13 @@ namespace PerformanceMeter
             log.Info($"AUT Input arguments: {AutStartInfo.Arguments}");
             log.Info($"AUT Main Thread ID: {Aut.Id}");
             log.Info($"AUT Process priority: {Aut.PriorityClass}");
-
-            Aut.WaitForExit();
+            log.Info("-- Redirecting user input to AUT --");
+            autLogger.WriteInput();
         }
 
         private void AutSetEvents()
         {
             Aut.EnableRaisingEvents = true;
-            AutLogger autLogger = new AutLogger(Aut);
             Aut.Exited += new EventHandler(autLogger.LogExit);
             
             if (!AutStartInfo.RedirectStandardInput)

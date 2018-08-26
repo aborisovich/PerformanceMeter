@@ -20,11 +20,19 @@ namespace PerformanceMeter
             this.aut = aut;
         }
 
+        public void WriteInput()
+        {
+            do
+            {
+                aut.StandardInput.WriteLine(Console.ReadLine());
+            }
+            while (!aut.HasExited);
+        }
+
         public void LogOutput(object sendingProcess, DataReceivedEventArgs output)
         {
             if (!string.IsNullOrEmpty(output.Data))
                 log.Info(output.Data);
-
         }
 
         public void LogError(object sendingProcess, DataReceivedEventArgs output)
@@ -37,7 +45,5 @@ namespace PerformanceMeter
         {
             log.Info($"AUT has terminated with exit code: {aut.ExitCode}. Exit time: {aut.ExitTime.ToLongTimeString()}");
         }
-
-
     }
 }
