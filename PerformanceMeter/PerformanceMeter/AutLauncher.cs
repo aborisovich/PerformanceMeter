@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using log4net;
 using PerformanceMeter.Settings;
 
@@ -18,6 +20,8 @@ namespace PerformanceMeter
 
         public ProcessStartInfo AutStartInfo { get; private set; }
 
+        public CancellationTokenSource InputCancellationSource { get; private set; }
+
         public AutLauncher()
         {
             AutStartInfo = new ProcessStartInfo()
@@ -30,16 +34,14 @@ namespace PerformanceMeter
                 UseShellExecute = !(ApplicationSettings.AutRedirectStandardInput || ApplicationSettings.AutRedirectStandardOutput || ApplicationSettings.AutRedirectStandardError),
                 CreateNoWindow = !ApplicationSettings.AutCreateWindow,
             };
+            InputCancellationSource = new CancellationTokenSource();
+            Aut = new Process{ StartInfo = AutStartInfo };
+            autLogger = new AutLogger(Aut);
+            AutSetEvents();
         }
 
         public void StartAut()
         {
-            Aut = new Process
-            {
-                StartInfo = AutStartInfo
-            };
-            autLogger = new AutLogger(Aut);
-            AutSetEvents();
             Aut.Start();
             Aut.ProcessorAffinity = new IntPtr(1);
             Aut.PriorityClass = Enum.Parse<ProcessPriorityClass>(ArgumentParser.AutPriority);
@@ -49,8 +51,6 @@ namespace PerformanceMeter
             log.Info($"AUT Input arguments: {AutStartInfo.Arguments}");
             log.Info($"AUT Main Thread ID: {Aut.Id}");
             log.Info($"AUT Process priority: {Aut.PriorityClass}");
-            log.Info("-- Redirecting user input to AUT --");
-            autLogger.WriteInput();
         }
 
         private void AutSetEvents()
@@ -68,6 +68,19 @@ namespace PerformanceMeter
                 Aut.ErrorDataReceived += new DataReceivedEventHandler(autLogger.LogError);
             else
                 log.Warn($"AUT Standard Error redirection is disabled. AUT may cause unhandled by Performance Meter errors.");
+        }
+
+        public void ReadConsoleAsync()
+        {
+            log.Info("-- Redirecting user input to AUT --");
+            Task autInput = null;
+            if (!Aut.HasExited)
+                autInput = Task.Run(() => Aut.StandardInput.WriteLine(Console.ReadLine()), InputCancellationSource.Token);
+            while(!Aut.HasExited)
+            {
+                if (autInput.Status != TaskStatus.Running)
+                    autInput = Task.Run(() => Aut.StandardInput.WriteLine(Console.ReadLine()), InputCancellationSource.Token);
+            }
         }
     }
 }

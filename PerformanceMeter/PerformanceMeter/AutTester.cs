@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using log4net;
 
 namespace PerformanceMeter
@@ -11,6 +12,7 @@ namespace PerformanceMeter
         public AutTester()
         {
             launcher = new AutLauncher();
+            launcher.Aut.Exited += AnalizeResults;
         }
 
         public void StartTest()
@@ -19,6 +21,8 @@ namespace PerformanceMeter
             {
                 log.Info($"*** Starting '{ArgumentParser.AutPath.Name}' AUT test ***");
                 launcher.StartAut();
+                launcher.ReadConsoleAsync();
+                launcher.Aut.WaitForExit();
             }
             catch(Exception exc)
             {
@@ -27,6 +31,12 @@ namespace PerformanceMeter
                 if (!launcher.Aut.HasExited)
                     launcher.Aut.Kill();
             }
+        }
+
+        public void AnalizeResults(object sendingProcess, EventArgs output)
+        {
+            launcher.InputCancellationSource.Cancel();
+            log.Info("Analizing results...");
         }
     }
 }

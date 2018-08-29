@@ -20,15 +20,6 @@ namespace PerformanceMeter
             this.aut = aut;
         }
 
-        public void WriteInput()
-        {
-            do
-            {
-                aut.StandardInput.WriteLine(Console.ReadLine());
-            }
-            while (!aut.HasExited);
-        }
-
         public void LogOutput(object sendingProcess, DataReceivedEventArgs output)
         {
             if (!string.IsNullOrEmpty(output.Data))
