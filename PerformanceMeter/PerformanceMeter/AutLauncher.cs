@@ -43,7 +43,8 @@ namespace PerformanceMeter
         public void StartAut()
         {
             Aut.Start();
-            Aut.ProcessorAffinity = new IntPtr(1);
+            if (SystemInfo.GetAffinity() != null)
+                Aut.ProcessorAffinity = SystemInfo.GetAffinity().Value;
             Aut.PriorityClass = Enum.Parse<ProcessPriorityClass>(ArgumentParser.AutPriority);
             Aut.BeginOutputReadLine();
             Aut.BeginErrorReadLine();

@@ -50,6 +50,24 @@ namespace PerformanceMeter
             throw new NotSupportedException($"Not supported operating system: {RuntimeInformation.OSDescription}");
         }
 
+        /// <summary>
+        /// Gets processor affinity bitmask recalculating <see cref="ArgumentParser.ProcessorAffinity"/> arguments.
+        /// </summary>
+        /// <returns>Processor affinity bitmask or null.</returns>
+        public static IntPtr? GetAffinity()
+        {
+            if (ArgumentParser.GetProcessorAffinity() == null)
+                return null;
+
+            int affinityMask = 0;
+            foreach(var number in ArgumentParser.GetProcessorAffinity())
+            {
+                int bitmask = (int)Math.Pow(2, number - 1);
+                affinityMask += bitmask;
+            }
+            return (IntPtr)affinityMask;
+        }
+
         public override string ToString()
         {
             return  $"Operating system: {OperatingSystem}\n" +

@@ -87,7 +87,10 @@ namespace PerformanceMeter
             {
                 if (string.IsNullOrWhiteSpace(value))
                     throw new ArgumentException("Argument is null or empty", nameof(ProcessorAffinity));
-                processorAffinity = new List<uint>(value.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(s => uint.Parse(s)));
+                var processors = new List<uint>(value.Split(",", StringSplitOptions.RemoveEmptyEntries).Select(s => uint.Parse(s)));
+                if (processors.Contains(0))
+                    throw new ArgumentException("Value can not be set to 0", nameof(ProcessorAffinity));
+                processorAffinity = processors;
             }   
         }
 
@@ -142,6 +145,17 @@ namespace PerformanceMeter
                 throw;
             }
             return true;
+        }
+
+        /// <summary>
+        /// Retrieves list of processor affinity numbers.
+        /// </summary>
+        /// <returns></returns>
+        public static List<uint> GetProcessorAffinity()
+        {
+            if (processorAffinity == null || processorAffinity.Count == 0)
+                return null;
+            return processorAffinity;
         }
 
         private static void SetArgumentProperties(ref string[] args, List<PropertyInfo> properties)

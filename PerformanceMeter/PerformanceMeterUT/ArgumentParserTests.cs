@@ -2,6 +2,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PerformanceMeter;
 using System;
 using System.IO;
+using System.Reflection;
 
 namespace InputOutputTests
 {
@@ -45,7 +46,7 @@ namespace InputOutputTests
         [TestMethod, TestCategory("InputArgumentsTests")]
         public void ParsingProcessorAffinityPositive()
         {
-            string[] inputArgs = new string[] { "-c", "0, 1, 3" };
+            string[] inputArgs = new string[] { "-c", "1, 2, 3" };
             ArgumentParser.ParseArguments(ref inputArgs);
             Assert.IsTrue(!string.IsNullOrWhiteSpace(ArgumentParser.ProcessorAffinity));
             string[] inputNumbers = inputArgs[1].Split(",", StringSplitOptions.RemoveEmptyEntries);
@@ -53,6 +54,21 @@ namespace InputOutputTests
             Assert.AreEqual(inputNumbers.Length, outputNumbers.Length);
             for (int i = 0; i < inputNumbers.Length; i++)
                 Assert.AreEqual(uint.Parse(inputNumbers[i]), uint.Parse(outputNumbers[i]));
+        }
+
+        [TestMethod, TestCategory("InputArgumentsTests")]
+        [ExpectedException(typeof(ArgumentException), "Value can not be set to 0")]
+        public void ParsingProcessorAffinityNegativeZeroValue()
+        {
+            string[] inputArgs = new string[] { "-c", "0, 2, 1" };
+            try
+            {
+                ArgumentParser.ParseArguments(ref inputArgs);
+            }
+            catch(TargetInvocationException e)
+            {
+                throw e.InnerException;
+            }
         }
 
         [TestMethod, TestCategory("InputArgumentsTests")]
