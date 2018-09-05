@@ -21,11 +21,10 @@ namespace PerformanceMeter
                     return;
                 log.Info("Performance Meter has started.");
                 appSettings.LoadConfig();
-                AutTester tester = new AutTester();
-                tester.StartTest();
-                TestResults testResults = tester.GenerateResults();
-                ResultsXmlHandler resultsHandler = new ResultsXmlHandler(testResults);
-                resultsHandler.WriteResults(ApplicationSettings.ResultsFile);
+                if (ArgumentParser.ResultsFile == null)
+                    CoreFunctions.PerformAutTest();
+                else
+                    CoreFunctions.AnalizeTestResults();
             }
             catch(TargetInvocationException)
             {

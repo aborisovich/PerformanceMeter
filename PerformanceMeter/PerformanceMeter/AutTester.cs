@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using log4net;
 
@@ -42,8 +43,19 @@ namespace PerformanceMeter
 
         public TestResults GenerateResults()
         {
-            log.Info($"AUT completed execution in: {AutLauncher.ElapsedTime}");
-            return new TestResults(ArgumentParser.AutPath.Name, AutLauncher.ElapsedTime.Elapsed, Convert.ToUInt32(ArgumentParser.ProcessorAffinity.Split(",", StringSplitOptions.RemoveEmptyEntries).Length));
+            log.Info($"AUT completed execution in: {AutLauncher.ElapsedTime.Elapsed}");
+            uint coresCount = (ArgumentParser.ProcessorAffinity == null) ? (uint)SystemInfo.LogicalCores : 
+                Convert.ToUInt32(ArgumentParser.ProcessorAffinity.Split(",", StringSplitOptions.RemoveEmptyEntries).Length);
+            return new TestResults(AutLauncher.ElapsedTime.Elapsed, coresCount);
+        }
+
+        public void AnalizeResults(List<TestResults> results)
+        {
+            log.Info($"Analizing test results of '{ArgumentParser.AutPath.Name}' from {results.Count} tests.");
+            foreach (var result in results)
+            {
+                
+            }
         }
     }
 }

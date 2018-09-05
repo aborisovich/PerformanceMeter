@@ -22,6 +22,7 @@ namespace PerformanceMeter
         private static ProcessPriorityClass autPriority = ProcessPriorityClass.Normal;
         private static List<uint> processorAffinity;
         private static FileInfo outputFile;
+        private static FileInfo resultsFile;
         private static ILog log = LogManager.GetLogger(typeof(ArgumentParser));
 
         /// <summary>
@@ -55,10 +56,10 @@ namespace PerformanceMeter
         /// <summary>
         /// Application Under Test input arguments.
         /// </summary>
-        [InputArgument("Application Under Test input arguments.", "-i")]
+        [InputArgument("Application Under Test input arguments. (optional)", "-i")]
         internal static string AutArgs { get; private set; }
 
-        [InputArgument("Application Under Test process priority.", "-p")]
+        [InputArgument("Application Under Test process priority. (optional, default=Normal)", "-p")]
         internal static string AutPriority
         {
             get { return autPriority.ToString(); }
@@ -74,7 +75,7 @@ namespace PerformanceMeter
         /// </summary>
         /// <exception cref="ArgumentNullException">Thrown on attempt to assign null.</exception>
         /// <exception cref="ArgumentException">Thrown on attempt to assign empty list.</exception>
-        [InputArgument("Logical processor numbers that can be used by the Application Under Test (separated by ',').", "-c")]
+        [InputArgument("Logical processor numbers that can be used by the Application Under Test separated by ','. (optional, default=allCores)", "-c")]
         internal static string ProcessorAffinity
         {
             get
@@ -95,10 +96,10 @@ namespace PerformanceMeter
         }
 
         /// <summary>
-        /// Path to the output file containing AUT performance test report and analisys.
+        /// Path to the output file where resuts from the AUT tests will be written to.
         /// </summary>
         /// <exception cref="DirectoryNotFoundException">Thrown when directory specified for writing output file does not exist.</exception>
-        [InputArgument("Path to the file containing report regarding AUT execution.", "-o")]
+        [InputArgument("Path to the XML file where AUT test results will be written. (optional, default=Results.xml)", "-o")]
         internal static FileInfo OutputFile
         {
             get { return outputFile; }
@@ -107,6 +108,21 @@ namespace PerformanceMeter
                 if (!value.Directory.Exists)
                     throw new DirectoryNotFoundException("Directory for the output file does not exist");
                 outputFile = value;
+            }
+        }
+
+        /// <summary>
+        /// Path to the results filr from which AUT tests results will be loaded for analisys.
+        /// </summary>
+        [InputArgument("Path to the XML file containing results from AUT tests.", "-r")]
+        internal static FileInfo ResultsFile
+        {
+            get { return resultsFile; }
+            private set
+            {
+                if (!value.Exists)
+                    throw new FileNotFoundException("File containing AUT results does not exist.");
+                resultsFile = value;
             }
         }
 
