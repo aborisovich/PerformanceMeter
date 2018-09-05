@@ -16,7 +16,9 @@ namespace PerformanceMeter
         ILog log = LogManager.GetLogger(typeof(AutLauncher));
         private AutLogger autLogger;
 
-        public Process Aut { get; private set; }
+        public static Process Aut { get; private set; }
+
+        public static Stopwatch ElapsedTime { get; private set; }
 
         public ProcessStartInfo AutStartInfo { get; private set; }
 
@@ -36,13 +38,15 @@ namespace PerformanceMeter
             };
             InputCancellationSource = new CancellationTokenSource();
             Aut = new Process{ StartInfo = AutStartInfo };
-            autLogger = new AutLogger(Aut);
+            autLogger = new AutLogger();
+            ElapsedTime = new Stopwatch();
             AutSetEvents();
         }
 
         public void StartAut()
         {
             Aut.Start();
+            ElapsedTime.Start();
             if (SystemInfo.GetAffinity() != null)
                 Aut.ProcessorAffinity = SystemInfo.GetAffinity().Value;
             Aut.PriorityClass = Enum.Parse<ProcessPriorityClass>(ArgumentParser.AutPriority);
@@ -57,6 +61,7 @@ namespace PerformanceMeter
         private void AutSetEvents()
         {
             Aut.EnableRaisingEvents = true;
+            Aut.Exited += new EventHandler(StopTimer);
             Aut.Exited += new EventHandler(autLogger.LogExit);
             
             if (!AutStartInfo.RedirectStandardInput)
@@ -71,6 +76,8 @@ namespace PerformanceMeter
                 log.Warn($"AUT Standard Error redirection is disabled. AUT may cause unhandled by Performance Meter errors.");
         }
 
+        public void StopTimer(object sendingProcess, EventArgs output) => ElapsedTime.Stop();
+
         public void ReadConsoleAsync()
         {
             log.Info("-- Redirecting user input to AUT --");
@@ -82,6 +89,12 @@ namespace PerformanceMeter
                 if (autInput.Status != TaskStatus.Running)
                     autInput = Task.Run(() => Aut.StandardInput.WriteLine(Console.ReadLine()), InputCancellationSource.Token);
             }
+        }
+
+        ~AutLauncher()
+        {
+            Aut.Exited -= StopTimer;
+            Aut.Exited -= autLogger.LogExit;
         }
     }
 }

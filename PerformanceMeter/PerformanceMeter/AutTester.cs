@@ -8,11 +8,12 @@ namespace PerformanceMeter
     {
         private ILog log = LogManager.GetLogger(typeof(AutTester));
         private AutLauncher launcher;
+        private DateTime exitTime;
 
         public AutTester()
         {
             launcher = new AutLauncher();
-            launcher.Aut.Exited += AnalizeResults;
+            AutLauncher.Aut.Exited += OnAutCompleted;
         }
 
         public void StartTest()
@@ -22,21 +23,27 @@ namespace PerformanceMeter
                 log.Info($"*** Starting '{ArgumentParser.AutPath.Name}' AUT test ***");
                 launcher.StartAut();
                 launcher.ReadConsoleAsync();
-                launcher.Aut.WaitForExit();
+                AutLauncher.Aut.WaitForExit();
             }
             catch(Exception exc)
             {
                 log.Fatal($"Application Under Test has been forcibly terminated due to unhandled exception.");
                 log.Fatal($"Source: {exc.Source} Message: {exc.Message}");
-                if (!launcher.Aut.HasExited)
-                    launcher.Aut.Kill();
+                if (!AutLauncher.Aut.HasExited)
+                    AutLauncher.Aut.Kill();
             }
         }
 
-        public void AnalizeResults(object sendingProcess, EventArgs output)
+        public void OnAutCompleted(object sendingProcess, EventArgs output)
         {
+            exitTime = AutLauncher.Aut.ExitTime;
             launcher.InputCancellationSource.Cancel();
-            log.Info("Analizing results...");
+        }
+
+        public TestResults GenerateResults()
+        {
+            log.Info($"AUT completed execution in: {AutLauncher.ElapsedTime}");
+            return new TestResults(ArgumentParser.AutPath.Name, AutLauncher.ElapsedTime.Elapsed, Convert.ToUInt32(ArgumentParser.ProcessorAffinity.Split(",", StringSplitOptions.RemoveEmptyEntries).Length));
         }
     }
 }

@@ -9,15 +9,13 @@ namespace PerformanceMeter
 {
     internal class AutLogger
     {
-        private Process aut;
         private ILog log;
 
-        public AutLogger(Process aut)
+        public AutLogger()
         {
             var logRepository = LogManager.CreateRepository("AutRepository");
             XmlConfigurator.Configure(logRepository, new FileInfo(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Settings", "AutLogger.config")));
             log = LogManager.GetLogger(logRepository.Name, typeof(AutLogger));
-            this.aut = aut;
         }
 
         public void LogOutput(object sendingProcess, DataReceivedEventArgs output)
@@ -34,7 +32,7 @@ namespace PerformanceMeter
 
         public void LogExit(object sendingProcess, EventArgs output)
         {
-            log.Info($"AUT has terminated with exit code: {aut.ExitCode}. Exit time: {aut.ExitTime.ToLongTimeString()}");
+            log.Info($"AUT has terminated with exit code: {AutLauncher.Aut.ExitCode}. Exit time: {AutLauncher.Aut.ExitTime}");
         }
     }
 }

@@ -26,6 +26,8 @@ namespace PerformanceMeter.Settings
 
         public static bool AutCreateWindow { get; private set; }
 
+        public static FileInfo ResultsFile { get; set; }
+
         public ApplicationSettings()
         {
             var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
@@ -65,6 +67,11 @@ namespace PerformanceMeter.Settings
             AutCreateWindow = (appSettings["AutCreateWindow"] != null) ? bool.Parse(appSettings["AutRedirectStandardError"].Value) : false;
             settingName = $"Setting: {nameof(AutCreateWindow)}";
             settingValue = $"Value: {AutCreateWindow}".PadLeft(columnPosition - (loggerSectionPad + settingName.Length));
+            log.Debug(settingName + settingValue);
+
+            ResultsFile = (ArgumentParser.OutputFile == null) ? new FileInfo(appSettings["DefaultResultsFile"].Value) : ArgumentParser.OutputFile;
+            settingName = $"Setting: {nameof(ResultsFile)}";
+            settingValue = $"Value: {ResultsFile}".PadLeft(columnPosition - (loggerSectionPad + settingName.Length));
             log.Debug(settingName + settingValue);
         }
     }

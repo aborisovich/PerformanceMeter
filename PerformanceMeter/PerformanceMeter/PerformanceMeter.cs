@@ -23,6 +23,9 @@ namespace PerformanceMeter
                 appSettings.LoadConfig();
                 AutTester tester = new AutTester();
                 tester.StartTest();
+                TestResults testResults = tester.GenerateResults();
+                ResultsXmlHandler resultsHandler = new ResultsXmlHandler(testResults);
+                resultsHandler.WriteResults(ApplicationSettings.ResultsFile);
             }
             catch(TargetInvocationException)
             {
