@@ -16,6 +16,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="README.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Settings\AutLogger.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
